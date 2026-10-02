@@ -30,3 +30,18 @@ export default function StatisticsScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        padding: 24,
+        backgroundColor: "#f0f0f0"
+    },
+    title: {
+        fontSize: 28,
+        fontWeight: "bold",
+        color: "#172554",
+        marginBottom: 10
+    },
+    description: {
+        fontSize: 16,
+        color: "#333",
+        marginBottom: 20
+    }
+});
