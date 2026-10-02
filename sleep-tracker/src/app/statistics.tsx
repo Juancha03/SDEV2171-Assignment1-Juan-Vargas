@@ -43,5 +43,10 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: "#333",
         marginBottom: 20
+    },
+    grid: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        justifyContent: "space-between"
     }
 });
