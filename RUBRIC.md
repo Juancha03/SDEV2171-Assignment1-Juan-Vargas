@@ -60,4 +60,4 @@ All reflection questions must be answered to be eligible for full marks.
 | **Good (3)** | Reflection addresses most prompts clearly and demonstrates good understanding of the project. Some references to project files, components, or commits are included, though explanations may lack depth or detail. |
 | **Satisfactory (2)** | Reflection answers the prompts but responses are brief, general, or lack clear references to specific parts of the project. Understanding of concepts is present but somewhat limited. |
 | **Needs Work (1)** | Reflection responses are incomplete, very brief, or demonstrate minimal understanding of the project. Few or no references to specific code, files, or commits. |
-| **Poor / Incomplete (0)** | Reflection missing, extremely incomplete, or does not address the required prompts. |
+| **Poor / Incomplete (0)** | Reflection missing, extremely incomplete, or does not address the required prompts. | 
