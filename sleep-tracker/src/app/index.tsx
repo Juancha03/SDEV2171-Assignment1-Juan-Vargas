@@ -1,5 +1,5 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { router } from "expo-router";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function HomeScreen() {
   return (
@@ -15,6 +15,13 @@ export default function HomeScreen() {
         onPress={() => router.push("/sleep-log")}
       >
         <Text style={styles.buttonText}>Add Sleep Log</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => router.push("/sleep-log-list")}
+      >
+        <Text style={styles.buttonText}>View Sleep Log List</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
