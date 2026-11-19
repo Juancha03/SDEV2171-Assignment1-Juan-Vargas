@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -6,58 +5,16 @@ import {
   Text,
   View,
 } from "react-native";
-
-interface SleepEntry {
-  id: number;
-  date: string;
-  bedTime: string;
-  wakeTime: string;
-  quality: number;
-}
-
-
-const API_URL = "http://10.0.2.2:3000/sleep-entries";
-
+import { useEntries } from "../context/EntriesContext";
 
 export default function SleepLogListScreen() {
-  const [sleepEntries, setSleepEntries] = useState<SleepEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  useEffect(() => {
-    async function getSleepEntries() {
-      try {
-        const response = await fetch(API_URL);
-
-        if (!response.ok) {
-          throw new Error("Could not get sleep entries.");
-        }
-
-        const data = await response.json();
-        setSleepEntries(data);
-      } catch (error) {
-        setErrorMessage("Could not load sleep entries from the backend.");
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    getSleepEntries();
-  }, []);
+  const { entries, isLoading, errorMessage } = useEntries();
 
   if (isLoading) {
     return (
-      <View style={styles.centeredContainer}>
+      <View style={styles.centered}>
         <ActivityIndicator size="large" color="#2563eb" />
-        <Text style={styles.message}>Loading sleep entries...</Text>
-      </View>
-    );
-  }
-
-  if (errorMessage) {
-    return (
-      <View style={styles.centeredContainer}>
-        <Text style={styles.error}>{errorMessage}</Text>
+        <Text style={styles.loadingText}>Loading sleep entries...</Text>
       </View>
     );
   }
@@ -66,15 +23,43 @@ export default function SleepLogListScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Sleep Log List</Text>
 
+      {errorMessage ? (
+        <Text style={styles.errorText}>{errorMessage}</Text>
+      ) : null}
+
       <FlatList
-        data={sleepEntries}
+        data={entries}
         keyExtractor={(item) => item.id.toString()}
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>No sleep entries found.</Text>
+        }
         renderItem={({ item }) => (
-          <View style={styles.entryCard}>
+          <View style={styles.card}>
             <Text style={styles.date}>{item.date}</Text>
-            <Text style={styles.entryText}>Time to bed: {item.bedTime}</Text>
-            <Text style={styles.entryText}>Time awake: {item.wakeTime}</Text>
-            <Text style={styles.entryText}>Sleep quality: {item.quality}/5</Text>
+
+            <Text style={styles.entryText}>
+              Sleep Log: {item.title}
+            </Text>
+
+            <Text style={styles.entryText}>
+              Sleep Duration: {item.value} hours
+            </Text>
+
+            <Text style={styles.entryText}>
+              Sleep Quality: {item.rating}/5
+            </Text>
+
+            {item.details?.bedTime ? (
+              <Text style={styles.entryText}>
+                Time to Bed: {item.details.bedTime}
+              </Text>
+            ) : null}
+
+            {item.details?.wakeTime ? (
+              <Text style={styles.entryText}>
+                Time Awake: {item.details.wakeTime}
+              </Text>
+            ) : null}
           </View>
         )}
       />
@@ -88,11 +73,11 @@ const styles = StyleSheet.create({
     padding: 24,
     backgroundColor: "#f0f0f0",
   },
-  centeredContainer: {
+  centered: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 24,
+    backgroundColor: "#f0f0f0",
   },
   title: {
     fontSize: 28,
@@ -100,32 +85,39 @@ const styles = StyleSheet.create({
     color: "#172554",
     marginBottom: 20,
   },
-  message: {
+  loadingText: {
+    fontSize: 16,
+    color: "#475569",
     marginTop: 12,
-    fontSize: 16,
   },
-  error: {
-    fontSize: 16,
+  errorText: {
     color: "#b91c1c",
-    textAlign: "center",
+    fontSize: 16,
+    marginBottom: 16,
   },
-  entryCard: {
+  emptyText: {
+    color: "#475569",
+    fontSize: 16,
+    textAlign: "center",
+    marginTop: 30,
+  },
+  card: {
     backgroundColor: "#ffffff",
     borderWidth: 1,
     borderColor: "#e5e7eb",
     borderRadius: 8,
     padding: 16,
-    marginBottom: 12,
+    marginBottom: 14,
   },
   date: {
     fontSize: 18,
     fontWeight: "bold",
     color: "#172554",
-    marginBottom: 8,
+    marginBottom: 10,
   },
   entryText: {
     fontSize: 16,
-    color: "#374151",
-    marginBottom: 4,
+    color: "#475569",
+    marginBottom: 5,
   },
 });
