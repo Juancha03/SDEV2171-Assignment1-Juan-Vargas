@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { useState } from "react";
 import {
   Alert,
@@ -7,22 +8,41 @@ import {
   TextInput,
   TouchableOpacity,
 } from "react-native";
+import { useEntries } from "../context/EntriesContext";
 
 function getPreviousNightDate() {
   const date = new Date();
   date.setDate(date.getDate() - 1);
 
-  return date.toLocaleDateString("en-CA");
+  return date.toISOString().split("T")[0];
+}
+
+function calculateSleepDuration(bedTime: string, wakeTime: string) {
+  const [bedHour, bedMinute] = bedTime.split(":").map(Number);
+  const [wakeHour, wakeMinute] = wakeTime.split(":").map(Number);
+
+  let bedTotalMinutes = bedHour * 60 + bedMinute;
+  let wakeTotalMinutes = wakeHour * 60 + wakeMinute;
+
+  if (wakeTotalMinutes <= bedTotalMinutes) {
+    wakeTotalMinutes += 24 * 60;
+  }
+
+  return Number(
+    ((wakeTotalMinutes - bedTotalMinutes) / 60).toFixed(1)
+  );
 }
 
 export default function SleepLogScreen() {
+  const { createEntry } = useEntries();
+
   const [date, setDate] = useState(getPreviousNightDate());
   const [bedTime, setBedTime] = useState("");
   const [wakeTime, setWakeTime] = useState("");
   const [quality, setQuality] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  function handleSubmit() {
+  async function handleSubmit() {
     const datePattern = /^\d{4}-\d{2}-\d{2}$/;
     const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
     const qualityNumber = Number(quality);
@@ -42,22 +62,51 @@ export default function SleepLogScreen() {
       return;
     }
 
-    if (qualityNumber < 1 || qualityNumber > 5) {
-      setErrorMessage("Sleep quality must be a number from 1 to 5.");
+    if (
+      !Number.isInteger(qualityNumber) ||
+      qualityNumber < 1 ||
+      qualityNumber > 5
+    ) {
+      setErrorMessage("Sleep quality must be a whole number from 1 to 5.");
       return;
     }
 
     setErrorMessage("");
 
-    Alert.alert(
-      "Sleep log saved",
-      "Your sleep log was submitted successfully. This assignment does not save it permanently."
-    );
+    const sleepDuration = calculateSleepDuration(bedTime, wakeTime);
+
+    const result = await createEntry({
+      date,
+      title: "Sleep Log",
+      category: "Sleep Tracker",
+      value: sleepDuration,
+      rating: qualityNumber,
+      notes: "Added from the Sleep Tracker mobile app.",
+      details: {
+        bedTime,
+        wakeTime,
+      },
+    });
+
+    if (!result.success) {
+      setErrorMessage(result.message);
+      return;
+    }
 
     setDate(getPreviousNightDate());
     setBedTime("");
     setWakeTime("");
     setQuality("");
+
+    Alert.alert("Sleep log saved", result.message, [
+      {
+        text: "View Sleep Log List",
+        onPress: () => router.push("/sleep-log-list"),
+      },
+      {
+        text: "Stay Here",
+      },
+    ]);
   }
 
   return (
