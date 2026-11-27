@@ -1,7 +1,15 @@
 import { router } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useAuth } from "../context/AuthContext";
 
 export default function HomeScreen() {
+  const { logout } = useAuth();
+
+  function handleLogout() {
+    logout();
+    router.replace("/login");
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Sleep Tracker</Text>
@@ -29,6 +37,13 @@ export default function HomeScreen() {
         onPress={() => router.push("/statistics")}
       >
         <Text style={styles.buttonText}>View Sleep Statistics</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.logoutButton}
+        onPress={handleLogout}
+      >
+        <Text style={styles.buttonText}>Logout</Text>
       </TouchableOpacity>
     </View>
   );
@@ -64,5 +79,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     textAlign: "center",
+  },
+  logoutButton: {
+    backgroundColor: "#DC2626",
+    padding: 16,
+    borderRadius: 8,
+    marginTop: 16,
   },
 });
