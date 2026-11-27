@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   StyleSheet,
@@ -6,16 +5,7 @@ import {
   View,
 } from "react-native";
 import StatCard from "../components/StatCard";
-
-interface SleepEntry {
-  id: number;
-  date: string;
-  bedTime: string;
-  wakeTime: string;
-  quality: number;
-}
-
-const API_URL = "http://10.0.2.2:3000/sleep-entries";
+import { useEntries } from "../context/EntriesContext";
 
 function timeToMinutes(time: string) {
   const [hours, minutes] = time.split(":").map(Number);
@@ -24,8 +14,9 @@ function timeToMinutes(time: string) {
 }
 
 function minutesToTime(totalMinutes: number) {
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = Math.round(totalMinutes % 60);
+  const roundedMinutes = Math.round(totalMinutes);
+  const hours = Math.floor(roundedMinutes / 60) % 24;
+  const minutes = roundedMinutes % 60;
 
   return `${hours.toString().padStart(2, "0")}:${minutes
     .toString()
@@ -33,36 +24,15 @@ function minutesToTime(totalMinutes: number) {
 }
 
 export default function StatisticsScreen() {
-  const [sleepEntries, setSleepEntries] = useState<SleepEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  useEffect(() => {
-    async function getSleepEntries() {
-      try {
-        const response = await fetch(API_URL);
-
-        if (!response.ok) {
-          throw new Error("Could not get sleep entries.");
-        }
-
-        const data = await response.json();
-        setSleepEntries(data);
-      } catch {
-        setErrorMessage("Could not load sleep statistics from the backend.");
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    getSleepEntries();
-  }, []);
+  const { entries, isLoading, errorMessage } = useEntries();
 
   if (isLoading) {
     return (
       <View style={styles.centeredContainer}>
         <ActivityIndicator size="large" color="#2563eb" />
-        <Text style={styles.message}>Loading sleep statistics...</Text>
+        <Text style={styles.message}>
+          Loading sleep statistics...
+        </Text>
       </View>
     );
   }
@@ -75,23 +45,39 @@ export default function StatisticsScreen() {
     );
   }
 
-  const totalEntries = sleepEntries.length;
+  const totalEntries = entries.length;
 
   const averageQuality =
-    sleepEntries.reduce((total, entry) => total + entry.quality, 0) /
-    totalEntries;
+    totalEntries > 0
+      ? entries.reduce(
+          (total, entry) => total + entry.rating,
+          0
+        ) / totalEntries
+      : 0;
+
+  const bedTimes = entries
+    .map((entry) => entry.details?.bedTime)
+    .filter((time): time is string => Boolean(time));
+
+  const wakeTimes = entries
+    .map((entry) => entry.details?.wakeTime)
+    .filter((time): time is string => Boolean(time));
 
   const averageBedTime =
-    sleepEntries.reduce(
-      (total, entry) => total + timeToMinutes(entry.bedTime),
-      0
-    ) / totalEntries;
+    bedTimes.length > 0
+      ? bedTimes.reduce(
+          (total, time) => total + timeToMinutes(time),
+          0
+        ) / bedTimes.length
+      : 0;
 
   const averageWakeTime =
-    sleepEntries.reduce(
-      (total, entry) => total + timeToMinutes(entry.wakeTime),
-      0
-    ) / totalEntries;
+    wakeTimes.length > 0
+      ? wakeTimes.reduce(
+          (total, time) => total + timeToMinutes(time),
+          0
+        ) / wakeTimes.length
+      : 0;
 
   return (
     <View style={styles.container}>
@@ -102,21 +88,36 @@ export default function StatisticsScreen() {
       </Text>
 
       <View style={styles.grid}>
-        <StatCard title="Total Sleep Entries" value={totalEntries.toString()} />
+        <StatCard
+          title="Total Sleep Entries"
+          value={totalEntries.toString()}
+        />
 
         <StatCard
           title="Average Sleep Quality"
-          value={`${averageQuality.toFixed(1)} / 5`}
+          value={
+            totalEntries > 0
+              ? `${averageQuality.toFixed(1)} / 5`
+              : "N/A"
+          }
         />
 
         <StatCard
           title="Average Time to Bed"
-          value={minutesToTime(averageBedTime)}
+          value={
+            bedTimes.length > 0
+              ? minutesToTime(averageBedTime)
+              : "N/A"
+          }
         />
 
         <StatCard
           title="Average Wake Time"
-          value={minutesToTime(averageWakeTime)}
+          value={
+            wakeTimes.length > 0
+              ? minutesToTime(averageWakeTime)
+              : "N/A"
+          }
         />
       </View>
     </View>
